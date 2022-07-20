@@ -79,7 +79,7 @@ class GeoDbContext(ApiContext):
         self._request = None
         self.config = root.config
         for key in default_config.keys():
-            if key not in self.config:
+            if key not in self.config['geodb_openeo']:
                 self.config['geodb_openeo'][key] = default_config[key]
         self._collections = {}
 

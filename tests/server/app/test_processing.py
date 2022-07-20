@@ -24,16 +24,16 @@ from typing import Dict
 
 import yaml
 from xcube.constants import EXTENSION_POINT_SERVER_APIS
-from xcube.server.testing import ServerTest
 from xcube.util import extension
 from xcube.util.extension import ExtensionRegistry
 
-from . import test_utils
 from xcube_geodb_openeo.backend import processes
 from xcube_geodb_openeo.backend.processes import LoadCollection
+from . import test_utils
+from .base_test import BaseTest
 
 
-class ProcessingTest(ServerTest):
+class ProcessingTest(BaseTest):
 
     def add_extension(self, er: ExtensionRegistry) -> None:
         er.add_extension(

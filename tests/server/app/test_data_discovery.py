@@ -4,17 +4,20 @@ from typing import Dict
 
 import yaml
 from xcube.constants import EXTENSION_POINT_SERVER_APIS
-from xcube.server.testing import ServerTest
 from xcube.util import extension
 from xcube.util.extension import ExtensionRegistry
+
 from . import test_utils
+from .base_test import BaseTest
 
 
-class DataDiscoveryTest(ServerTest):
+class DataDiscoveryTest(BaseTest):
 
     def add_extension(self, er: ExtensionRegistry) -> None:
-        er.add_extension(loader=extension.import_component('xcube_geodb_openeo.api:api'),
-                         point=EXTENSION_POINT_SERVER_APIS, name='geodb-openeo')
+        er.add_extension(
+            loader=extension.import_component('xcube_geodb_openeo.api:api'),
+            point=EXTENSION_POINT_SERVER_APIS,
+            name='geodb-openeo')
 
     def add_config(self, config: Dict):
         data = pkgutil.get_data('tests', 'test_config.yml')

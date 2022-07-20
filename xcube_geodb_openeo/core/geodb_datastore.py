@@ -19,8 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import json
-import numpy as np
+import os
+
 from functools import cached_property
 from typing import Tuple
 from typing import Optional
@@ -42,11 +42,16 @@ class GeoDBDataStore(DataStore):
     def geodb(self):
         assert self.config
 
-        server_url = self.config['geodb_openeo']['postgrest_url']
-        server_port = self.config['geodb_openeo']['postgrest_port']
-        client_id = self.config['geodb_openeo']['client_id']
-        client_secret = self.config['geodb_openeo']['client_secret']
-        auth_domain = self.config['geodb_openeo']['auth_domain']
+        api_config = self.config['geodb_openeo']
+        server_url = api_config['postgrest_url']
+        server_port = api_config['postgrest_port']
+        client_id = api_config['client_id'] \
+            if 'client_id' in api_config \
+            else os.getenv('XC_GEODB_OPENEO_CLIENT_ID')
+        client_secret = api_config['client_secret'] \
+            if 'client_secret' in api_config \
+            else os.getenv('XC_GEODB_OPENEO_CLIENT_SECRET')
+        auth_domain = api_config['auth_domain']
 
         return GeoDBClient(
             server_url=server_url,
