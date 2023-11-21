@@ -18,11 +18,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
+from typing import Any
+from typing import Mapping
 
-from .catalog import API_VERSION
-from .catalog import STAC_VERSION
-from ..server.config import Config
-from ..server.context import RequestContext
+from ..defaults import API_VERSION
+from ..defaults import STAC_VERSION
 from ..version import __version__
 
 '''
@@ -31,67 +31,77 @@ https://openeo.org/documentation/1.0/developers/api/reference.html#tag/Capabilit
 '''
 
 
-def get_root(config: Config, ctx: RequestContext):
+def get_root(config: Mapping[str, Any], base_url: str):
     return {
         'api_version': API_VERSION,
         'backend_version': __version__,
         'stac_version': STAC_VERSION,
-        'type': 'catalog',
-        "id": config['SERVER_ID'],
-        "title": config['SERVER_TITLE'],
-        "description": config['SERVER_DESCRIPTION'],
-        'endpoints': [
-            {'path': '/collections', 'methods': ['GET']},
-            # TODO - only list endpoints, which are implemented and are
-            #  fully compatible to the API specification.
+        'type': 'Catalog',
+        "id": config['geodb_openeo']['SERVER_ID'],
+        "title": config['geodb_openeo']['SERVER_TITLE'],
+        "description": config['geodb_openeo']['SERVER_DESCRIPTION'],
+        "conformsTo": [
+            f'https://api.stacspec.org/v1.0.0/{part}'
+            for part in ['core', 'collections', 'ogcapi-features']
         ],
-        "links": [  # todo - links are incorrect
+        'endpoints': [
+            {'path': '/.well-known/openeo', 'methods': ['GET']},
+            {'path': '/file_formats', 'methods': ['GET']},
+            {'path': '/result', 'methods': ['POST']},
+            {'path': '/collections', 'methods': ['GET']},
+            {'path': '/processes', 'methods': ['GET']},
+            {'path': '/collections/{collection_id}', 'methods': ['GET']},
+            {'path': '/collections/{collection_id}/items', 'methods': ['GET']},
+            {'path': '/collections/{collection_id}/items/{feature_id}',
+             'methods': ['GET']},
+        ],
+        "links": [
+            {
+                "rel": "root",
+                "href": f"{base_url}/",
+                "type": "application/json",
+                "title": "this document"
+            },
             {
                 "rel": "self",
-                "href": ctx.get_url('/'),
+                "href": f"{base_url}/",
                 "type": "application/json",
                 "title": "this document"
             },
             {
                 "rel": "service-desc",
-                "href": ctx.get_url('/api'),
+                "href": f'{base_url}/openapi.json',
                 "type": "application/vnd.oai.openapi+json;version=3.0",
                 "title": "the API definition"
             },
             {
                 "rel": "service-doc",
-                "href": ctx.get_url('/api.html'),
+                "href": f"{base_url}/api.html",
                 "type": "text/html",
                 "title": "the API documentation"
             },
             {
                 "rel": "conformance",
-                "href": ctx.get_url('/conformance'),
+                "href": f"{base_url}/conformance",
                 "type": "application/json",
                 "title": "OGC API conformance classes"
                          " implemented by this server"
             },
             {
                 "rel": "data",
-                "href": ctx.get_url('/collections'),
+                "href": f"{base_url}/collections",
                 "type": "application/json",
                 "title": "Information about the feature collections"
-            },
-            {
-                "rel": "search",
-                "href": ctx.get_url('/search'),
-                "type": "application/json",
-                "title": "Search across feature collections"
             }
         ]
     }
 
 
-def get_well_known(config: Config):
+def get_well_known(config: Mapping[str, Any]):
     return {
         'versions': [
             {
-                'url': config['SERVER_URL'],
+                'url': config['geodb_openeo']['SERVER_URL'],
                 'api_version': API_VERSION
             }
         ]
@@ -101,11 +111,5 @@ def get_well_known(config: Config):
 # noinspection PyUnusedLocal
 def get_conformance():
     return {
-        "conformsTo": [
-            # TODO: fix this list so it becomes true
-            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
-            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30",
-            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/html",
-            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson"
-        ]
+        "conformsTo": []
     }

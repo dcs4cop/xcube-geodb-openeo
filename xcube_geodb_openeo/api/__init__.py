@@ -19,20 +19,4 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from xcube.util.jsonschema import JsonNumberSchema
-from xcube.util.jsonschema import JsonObjectSchema
-from xcube.util.jsonschema import JsonStringSchema
-
-OPENEO_CONFIG_SCHEMA = JsonObjectSchema(
-    properties=dict(
-        geodb_openeo=JsonObjectSchema(properties=dict(
-            postgrest_url=JsonStringSchema(),
-            postgrest_port=JsonNumberSchema(),
-            client_id=JsonStringSchema(),
-            client_secret=JsonStringSchema(),
-            auth_domain=JsonStringSchema(),
-            kc_clientId=JsonStringSchema(),
-            kc_secret=JsonStringSchema())
-        )),
-    additional_properties=True
-)
+from .routes import api

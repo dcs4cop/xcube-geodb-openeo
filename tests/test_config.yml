@@ -1,5 +1,15 @@
-SERVER_URL: http://xcube-geoDB-openEO.de
-SERVER_ID: xcube-geodb-openeo
-SERVER_TITLE: xcube geoDB Server, openEO API
-SERVER_DESCRIPTION: Catalog of geoDB collections.
-datasource-class: tests.core.mock_datasource.MockDataSource
+geodb_openeo:
+  vectorcube_provider_class: tests.core.mock_vc_provider.MockProvider
+  SERVER_URL: http://xcube-geoDB-openEO.de
+  SERVER_ID: xcube-geodb-openeo
+  SERVER_TITLE: xcube geoDB Server, openEO API
+  SERVER_DESCRIPTION: Catalog of geoDB collections.
+
+api_spec:
+  includes:
+    - geodb-openeo
+    - meta
+    - auth
+
+tornado:
+  xheaders: true

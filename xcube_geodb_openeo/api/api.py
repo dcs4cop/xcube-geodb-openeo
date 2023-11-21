@@ -19,20 +19,18 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-from xcube.util.jsonschema import JsonNumberSchema
-from xcube.util.jsonschema import JsonObjectSchema
-from xcube.util.jsonschema import JsonStringSchema
+from xcube.server.api import Api
+from xcube.server.api import Context
 
-OPENEO_CONFIG_SCHEMA = JsonObjectSchema(
-    properties=dict(
-        geodb_openeo=JsonObjectSchema(properties=dict(
-            postgrest_url=JsonStringSchema(),
-            postgrest_port=JsonNumberSchema(),
-            client_id=JsonStringSchema(),
-            client_secret=JsonStringSchema(),
-            auth_domain=JsonStringSchema(),
-            kc_clientId=JsonStringSchema(),
-            kc_secret=JsonStringSchema())
-        )),
-    additional_properties=True
-)
+from .context import GeoDbContext
+from ..server.config import OPENEO_CONFIG_SCHEMA
+from ..version import __version__
+
+
+def create_ctx(root_ctx: Context) -> GeoDbContext:
+    return GeoDbContext(root_ctx)
+
+
+api = Api('geodb-openeo', version=__version__,
+          config_schema=OPENEO_CONFIG_SCHEMA,
+          create_ctx=create_ctx)

@@ -19,22 +19,15 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import json
-from typing import Sequence
-from xcube_geodb_openeo.core.datasource import DataSource
-from xcube_geodb_openeo.core.vectorcube import VectorCube
-import importlib.resources as resources
+from xcube.util import extension
+from xcube.constants import EXTENSION_POINT_SERVER_APIS
 
 
-class MockDataSource(DataSource):
-
-    def __init__(self):
-        with resources.open_text('tests', 'mock_collections.json') as text:
-            mock_collections = json.load(text)['_MOCK_COLLECTIONS_LIST']
-        self._MOCK_COLLECTIONS = {v["id"]: v for v in mock_collections}
-
-    def get_collection_keys(self) -> Sequence:
-        return list(self._MOCK_COLLECTIONS.keys())
-
-    def get_vector_cube(self, collection_id) -> VectorCube:
-        return self._MOCK_COLLECTIONS[collection_id]
+def init_plugin(ext_registry: extension.ExtensionRegistry):
+    ext_registry.add_extension(
+        loader=extension.import_component(
+            'xcube_geodb_openeo.api:api'
+        ),
+        point=EXTENSION_POINT_SERVER_APIS,
+        name='geodb-openeo'
+    )

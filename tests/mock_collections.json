@@ -3,7 +3,9 @@
     {
       "id": "collection_1",
       "metadata": {
-        "title": "I am collection #1"
+        "title": "I am collection #1",
+        "license_title": "MIT",
+        "license_url": "https://opensource.org/license/mit/"
       },
       "features": [
         {
@@ -34,6 +36,13 @@
       "id": "collection_3",
       "metadata": {
         "title": "I am collection #3"
+      },
+      "features": []
+    },
+    {
+      "id": "empty_collection",
+      "metadata": {
+        "title": "I don't have any features"
       },
       "features": []
     }

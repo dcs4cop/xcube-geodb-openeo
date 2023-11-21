@@ -20,8 +20,22 @@
 # DEALINGS IN THE SOFTWARE.
 
 default_config = {
-    'SERVER_URL': 'http://www.brockmann-consult.de/xcube-geoDB-openEO',
+    'SERVER_URL': 'https://www.brockmann-consult.de/xcube-geoDB-openEO',
     'SERVER_ID': 'xcube-geodb-openeo',
     'SERVER_TITLE': 'xcube geoDB Server, openEO API',
     'SERVER_DESCRIPTION': 'Catalog of geoDB collections.'
 }
+
+# Version number of the openEO specification this back-end implements.
+API_VERSION = '1.1.0'
+STAC_VERSION = '1.0.0'
+STAC_EXTENSIONS = \
+    ['https://stac-extensions.github.io/datacube/v2.2.0/schema.json',
+     'https://stac-extensions.github.io/version/v1.0.0/schema.json']
+
+STAC_DEFAULT_ITEMS_LIMIT = 10
+STAC_MIN_ITEMS_LIMIT = 1
+STAC_MAX_ITEMS_LIMIT = 1000
+
+DEFAULT_VC_CACHE_SIZE = 150
+MAX_NUMBER_OF_GEOMETRIES_DISPLAYED = 20

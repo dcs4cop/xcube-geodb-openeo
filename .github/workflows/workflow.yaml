@@ -13,6 +13,9 @@ env:
   SKIP_UNITTESTS: "0"
   WAIT_FOR_STARTUP: "1"
 
+  # If set to 1, docker build is performed
+  FORCE_DOCKER_BUILD: "1"
+
 
 jobs:
   unittest:
@@ -23,31 +26,91 @@ jobs:
     steps:
       - run: |
           echo "SKIP_UNITTESTS: ${{ env.SKIP_UNITTESTS }}"
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v3
+        name: Checkout xcube-geodb-openeo repo
+      - name: Checkout xcube repo
+        uses: actions/checkout@v3
+        with:
+          repository: dcs4cop/xcube
+          path: "xcube"
+      - uses: mamba-org/setup-micromamba@v1
         if: ${{ env.SKIP_UNITTESTS == '0' }}
         with:
-          mamba-version: "*"
-          channels: conda-forge
-          auto-update-conda: false
-          activate-environment: xcube-geodb-openeo
+          micromamba-version: '1.4.8-0'
           environment-file: environment.yml
+          init-shell: >-
+            bash
+          cache-environment: true
+          post-cleanup: 'all'
       - run: |
           conda info
           conda list
-          conda config --show-sources
-          conda config --show
-          printenv | sort
+      - name: setup-xcube
+        if: ${{ env.SKIP_UNITTESTS == '0' }}
+        run: |
+          cd xcube
+          micromamba env update -n xcube-geodb-openeo -f environment.yml
+          pip install -e .
+          cd ..
       - name: setup-xcube-geodb-openeo
         if: ${{ env.SKIP_UNITTESTS == '0' }}
         run: |
-          python setup.py develop
+          pip install -e .
       - name: unittest-xcube-geodb-openeo
         if: ${{ env.SKIP_UNITTESTS == '0' }}
         run: |
-          pytest --cov=./ --cov-report=xml --tb=native
+          pytest --cov=./ --cov-report=xml --tb=native tests
       - uses: codecov/codecov-action@v2
         if: ${{ env.SKIP_UNITTESTS == '0' }}
         with:
           fail_ci_if_error: true
           verbose: false
+
+  build-docker-image:
+    runs-on: ubuntu-latest
+    needs: [unittest]
+    name: build-docker-image
+    steps:
+      # Checkout xcube-geodb-openeo (this project)
+      - name: git-checkout
+        uses: actions/checkout@v2
+        if: ${{ steps.deployment-phase.outputs.phase != 'ignore' || env.FORCE_DOCKER_BUILD == '1'}}
+      # Get the base release tag used in docker images
+      - name: get-release-tag
+        id: release
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        if: ${{ steps.deployment-phase.outputs.phase != 'ignore' || env.FORCE_DOCKER_BUILD == '1'}}
+      # The docker image always needs the version as in version.py
+      - name: get-xcube-geodb-openeo-version
+        id: real-version
+        if: ${{ steps.deployment-phase.outputs.phase != 'ignore' || env.FORCE_DOCKER_BUILD == '1'}}
+        run: |
+          VERSION=$(echo "`cat xcube_geodb_openeo/version.py | grep version | cut -d "'" -f2`")
+          echo ::set-output name=version::${VERSION}
+      # Determine the deployment phase (dev/stage/prod) will be 'ignore' if a dev branch is processed
+      - name: deployment-phase
+        id: deployment-phase
+        uses: bc-org/gha-determine-phase@v0.1
+        if: ${{ steps.deployment-phase.outputs.phase != 'ignore' || env.FORCE_DOCKER_BUILD == '1'}}
+        with:
+          event_name: ${{ github.event_name }}
+          tag: ${{ steps.release.outputs.tag }}
+      - name: info
+        id: info
+        run: |
+          echo "TAG: ${{ steps.release.outputs.tag }}"
+          echo "DEPLOYMENT_PHASE: ${{ steps.deployment-phase.outputs.phase }}"
+          echo "REAL_VERSION: ${{ steps.real-version.outputs.version }}"
+          echo "EVENT: ${{ github.event_name }}"
+      # Build docker image
+      - uses: mr-smithers-excellent/docker-build-push@v5.5
+        if: ${{ steps.deployment-phase.outputs.phase != 'ignore' || env.FORCE_DOCKER_BUILD == '1'}}
+        name: build-and-push-docker-image
+        with:
+          image: ${{ env.ORG_NAME }}/${{ env.APP_NAME }}-server
+          directory: .
+          dockerfile: docker/Dockerfile
+          addLatest: true
+          registry: quay.io
+          username: ${{ secrets.QUAY_REG_USERNAME }}
+          password: ${{ secrets.QUAY_REG_PASSWORD }}
